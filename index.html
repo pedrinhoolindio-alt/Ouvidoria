@@ -65,11 +65,20 @@
         .badge-open { background: #FEF3C7; color: #92400E; }
         .badge-done { background: #DCFCE7; color: #166534; }
 
-        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-import { background: var(--senac-orange); color: #fff; }
         .btn-export { background: var(--success); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-main:hover { opacity: 0.85; transform: translateY(-1px); }
 
         .hidden { display: none !important; }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 80px; padding: 15px; }
+            .sidebar h2, .nav-item span { display: none; }
+            .main { margin-left: 80px; width: calc(100% - 80px); }
+            .cards-container { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -77,10 +86,12 @@
 <aside class="sidebar">
     <h2>Sesc/Senac</h2>
     <div class="nav-item active"><i class="fas fa-th-large"></i> <span>Dashboard</span></div>
-    <div class="nav-item"><i class="fas fa-history"></i> <span>Histórico</span></div>
     
     <div style="margin-top: auto;">
-        <button class="btn-main btn-import" onclick="document.getElementById('fileInput').click()">
+        <button class="btn-main btn-danger" onclick="clearDatabase()" style="width: 100%; margin-bottom: 10px;">
+            <i class="fas fa-trash-alt"></i> <span>LIMPAR BANCO</span>
+        </button>
+        <button class="btn-main btn-import" onclick="document.getElementById('fileInput').click()" style="width: 100%;">
             <i class="fas fa-cloud-upload-alt"></i> <span>IMPORTAR BASE</span>
         </button>
     </div>
@@ -156,7 +167,9 @@
 <input type="file" id="fileInput" class="hidden" accept=".xlsx">
 
 <script>
-// CONFIGURAÇÃO FIREBASE COM SUAS CHAVES
+// ==========================================
+// CONFIGURAÇÃO FIREBASE (SUAS CHAVES REAIS)
+// ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAaWmy-IVB8MX9hBH3wuw8zo83dHUzeqbM",
   authDomain: "relatorio-ouvidoria.firebaseapp.com",
@@ -166,12 +179,12 @@ const firebaseConfig = {
   appId: "1:919992393287:web:46e9d60ab2e07acfca1b62"
 };
 
-// Inicialização
+// Inicialização Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 let allData = [];
 
-// Carregar Dados em Tempo Real
+// Carregar Dados em Tempo Real do Firestore
 function initApp() {
     db.collection("protocolos").onSnapshot((querySnapshot) => {
         allData = [];
@@ -184,26 +197,48 @@ function initApp() {
 
 window.onload = initApp;
 
-// Sincronizar Excel para o Banco
+// Sincronizar Excel para o Banco Firestore
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const reader = new FileReader();
     reader.onload = (evt) => {
         const wb = XLSX.read(new Uint8Array(evt.target.result), {type: 'array'});
         const rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval: ""});
         
+        const batch = db.batch();
         rawData.forEach(item => {
-            db.collection("protocolos").add(item);
+            const docRef = db.collection("protocolos").doc();
+            batch.set(docRef, item);
         });
-        alert("Sincronização com banco concluída!");
+        
+        batch.commit().then(() => {
+            alert("Sincronização com banco concluída!");
+        }).catch(err => console.error("Erro ao importar:", err));
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 });
 
-// Atualizar Status no Banco
+// Atualizar Status Individual no Banco
 async function updateStatus(docId, newStatus) {
-    await db.collection("protocolos").doc(docId).update({ "Status": newStatus });
+    try {
+        await db.collection("protocolos").doc(docId).update({ "Status": newStatus });
+    } catch (error) {
+        console.error("Erro ao atualizar status:", error);
+    }
 }
 
+// Limpar todo o Banco de Dados
+async function clearDatabase() {
+    if (!confirm("⚠️ ATENÇÃO: Isso apagará TODOS os dados permanentemente! Continuar?")) return;
+    
+    const snapshot = await db.collection("protocolos").get();
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    
+    await batch.commit();
+    alert("Banco de dados reiniciado.");
+}
+
+// Funções de Cálculo e Formatação
 function formatDateOnly(dateVal) {
     if (!dateVal) return null;
     let d;
@@ -270,11 +305,12 @@ function processData() {
         const sla = calculateSLA(item['Data de Realização'], item['Status']);
         const statusRaw = String(item['Status'] || "").toLowerCase().trim();
         const isEmAndamento = statusRaw === "em andamento";
+        const dDisplay = formatDateOnly(item['Data de Realização']);
 
         return `
             <tr>
                 <td><span class="num-seq">${item['Número Sequencial']}</span></td>
-                <td>${formatDateOnly(item['Data de Realização']) ? formatDateOnly(item['Data de Realização']).toLocaleDateString('pt-BR') : '-'}</td>
+                <td>${dDisplay ? dDisplay.toLocaleDateString('pt-BR') : '-'}</td>
                 <td><span class="badge ${isEmAndamento ? 'badge-open' : 'badge-done'}">${item['Status']}</span></td>
                 <td>
                     <div class="actions-cell">
@@ -302,7 +338,7 @@ function renderReports(m) {
     document.getElementById('perfReport').innerHTML = `
         <div class="report-row"><span>Concluídos</span><span class="report-value">${m.done}</span></div>
         <div class="report-row"><span>Pendentes</span><span class="report-value">${m.open}</span></div>
-        <div class="report-row"><span>Críticos</span><span class="report-value" style="color:var(--danger)">${m.late}</span></div>
+        <div class="report-row"><span>Críticos (>30d)</span><span class="report-value" style="color:var(--danger)">${m.late}</span></div>
     `;
 
     let locHtml = '';
@@ -313,6 +349,7 @@ function renderReports(m) {
 }
 
 function exportExcel() {
+    if(allData.length === 0) return alert("Sem dados para exportar!");
     const ws = XLSX.utils.json_to_sheet(allData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Ouvidoria");
