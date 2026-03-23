@@ -1,0 +1,16 @@
+{
+  "name": "Ouvidoria Sesc Senac",
+  "short_name": "Ouvidoria",
+  "description": "Gestão Estratégica de SLA e Protocolos",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#003F7F",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1063/1063376.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
