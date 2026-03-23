@@ -11,6 +11,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
@@ -24,38 +26,30 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 
-        /* Sidebar adaptada para App */
         .sidebar { width: 260px; background: var(--senac-blue); color: #fff; height: 100vh; position: fixed; padding: 25px; display: flex; flex-direction: column; z-index: 100; box-shadow: 4px 0 10px rgba(0,0,0,0.1); }
         .sidebar h2 { font-size: 1.4rem; margin-bottom: 30px; color: var(--senac-orange); border-bottom: 2px solid rgba(244,121,32,0.3); padding-bottom: 15px; text-align: center; font-weight: 800; }
         .nav-item { padding: 14px; cursor: pointer; border-radius: 12px; margin-bottom: 8px; transition: 0.3s; display: flex; align-items: center; gap: 12px; font-weight: 500; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); }
         .nav-item.active { background: var(--senac-orange); color: #fff; box-shadow: 0 4px 12px rgba(244,121,32,0.3); }
 
         .main { margin-left: 260px; flex: 1; padding: 30px; width: calc(100% - 260px); }
-        
-        /* Topbar Estilizada */
         .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .topbar h1 { font-size: 1.5rem; font-weight: 800; color: var(--senac-blue); }
         
         .filter-section { background: #fff; padding: 20px; border-radius: 16px; margin-bottom: 25px; display: flex; gap: 15px; align-items: flex-end; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); }
         .filter-group { display: flex; flex-direction: column; gap: 6px; }
         .filter-group label { font-size: 0.65rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-        .filter-group input, .filter-group select { padding: 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-size: 0.9rem; transition: 0.2s; }
-        .filter-group input:focus { border-color: var(--senac-blue); ring: 2px rgba(0,63,127,0.1); }
+        .filter-group input, .filter-group select { padding: 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-size: 0.9rem; }
 
-        /* Cards com efeito Glass */
         .cards-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
-        .stat-card { background: #fff; padding: 25px; border-radius: 20px; border-top: 6px solid var(--senac-blue); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-card h4 { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+        .stat-card { background: #fff; padding: 25px; border-radius: 20px; border-top: 6px solid var(--senac-blue); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        .stat-card h4 { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
         .stat-val { font-size: 2rem; font-weight: 900; color: var(--senac-blue); }
 
         .reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
         .report-card { background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); }
         .report-card h3 { font-size: 1rem; color: var(--senac-blue); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .report-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #F1F5F9; font-size: 0.9rem; }
-        .report-label { color: var(--muted); font-weight: 500; }
-        .report-value { font-weight: 700; color: var(--text); }
+        .report-value { font-weight: 700; }
         .perc-badge { background: #E0E7FF; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: var(--senac-blue); font-weight: 800; }
 
         .table-container { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border); }
@@ -63,30 +57,19 @@
         th { padding: 18px; text-align: left; background: #F8FAFC; color: var(--senac-blue); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--border); }
         td { padding: 16px; border-bottom: 1px solid #F1F5F9; font-size: 0.85rem; }
 
-        .num-seq { color: var(--senac-blue); font-weight: 800; cursor: pointer; padding: 4px 8px; background: #E0E7FF; border-radius: 6px; position: relative; }
-        
         .actions-cell { display: flex; gap: 8px; }
         .btn-action { padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: #fff; cursor: pointer; font-size: 0.75rem; font-weight: 700; transition: 0.2s; }
-        .btn-action:hover { background: var(--senac-blue); color: #fff; border-color: var(--senac-blue); }
+        .btn-action:hover { background: var(--senac-blue); color: #fff; }
 
-        .badge { padding: 6px 12px; border-radius: 30px; font-weight: 800; font-size: 0.65rem; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .badge { padding: 6px 12px; border-radius: 30px; font-weight: 800; font-size: 0.65rem; text-transform: uppercase; }
         .badge-open { background: #FEF3C7; color: #92400E; }
         .badge-done { background: #DCFCE7; color: #166534; }
 
-        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .btn-import { background: var(--senac-orange); color: #fff; }
         .btn-export { background: var(--success); color: #fff; }
-        .btn-main:hover { opacity: 0.9; transform: scale(1.02); }
 
         .hidden { display: none !important; }
-        
-        /* Mobile Resp. */
-        @media (max-width: 1024px) {
-            .sidebar { width: 80px; padding: 15px; }
-            .sidebar h2, .nav-item span { display: none; }
-            .main { margin-left: 80px; width: calc(100% - 80px); }
-            .cards-container { grid-template-columns: repeat(2, 1fr); }
-        }
     </style>
 </head>
 <body>
@@ -173,36 +156,52 @@
 <input type="file" id="fileInput" class="hidden" accept=".xlsx">
 
 <script>
+// CONFIGURAÇÃO FIREBASE COM SUAS CHAVES
+const firebaseConfig = {
+  apiKey: "AIzaSyAaWmy-IVB8MX9hBH3wuw8zo83dHUzeqbM",
+  authDomain: "relatorio-ouvidoria.firebaseapp.com",
+  projectId: "relatorio-ouvidoria",
+  storageBucket: "relatorio-ouvidoria.firebasestorage.app",
+  messagingSenderId: "919992393287",
+  appId: "1:919992393287:web:46e9d60ab2e07acfca1b62"
+};
+
+// Inicialização
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 let allData = [];
 
-// Registro do Service Worker para modo Aplicativo
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-            console.log('PWA: Ativo');
-        }).catch(err => console.log('PWA Erro:', err));
+// Carregar Dados em Tempo Real
+function initApp() {
+    db.collection("protocolos").onSnapshot((querySnapshot) => {
+        allData = [];
+        querySnapshot.forEach((doc) => {
+            allData.push({ id: doc.id, ...doc.data() });
+        });
+        processData();
     });
 }
 
+window.onload = initApp;
+
+// Sincronizar Excel para o Banco
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const reader = new FileReader();
     reader.onload = (evt) => {
         const wb = XLSX.read(new Uint8Array(evt.target.result), {type: 'array'});
-        allData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval: ""}).map((item, index) => ({
-            ...item,
-            originalIndex: index
-        }));
-        processData();
+        const rawData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval: ""});
+        
+        rawData.forEach(item => {
+            db.collection("protocolos").add(item);
+        });
+        alert("Sincronização com banco concluída!");
     };
     reader.readAsArrayBuffer(e.target.files[0]);
 });
 
-function updateStatus(idx, newStatus) {
-    const item = allData.find(d => d.originalIndex === idx);
-    if(item) {
-        item['Status'] = newStatus;
-        processData();
-    }
+// Atualizar Status no Banco
+async function updateStatus(docId, newStatus) {
+    await db.collection("protocolos").doc(docId).update({ "Status": newStatus });
 }
 
 function formatDateOnly(dateVal) {
@@ -221,19 +220,16 @@ function formatDateOnly(dateVal) {
 
 function calculateSLA(dateStr, status) {
     const s = String(status || "").toLowerCase().trim();
-    if (s !== "em andamento") {
-        return { msg: "✅ Finalizado", class: "badge badge-done", isLate: false };
-    }
+    if (s !== "em andamento") return { msg: "✅ Finalizado", class: "badge badge-done" };
 
     const dataRealizacao = formatDateOnly(dateStr);
-    if (!dataRealizacao) return { msg: "-", class: "", isLate: false };
-
+    if (!dataRealizacao) return { msg: "-", class: "" };
+    
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
     const diffDays = Math.floor((hoje - dataRealizacao) / (1000 * 60 * 60 * 24));
 
     if (diffDays > 30) return { msg: `🚨 CRÍTICO (${diffDays}d)`, class: "badge badge-open", style: "background:#FEE2E2; color:#B91C1C", isLate: true };
     if (diffDays > 2) return { msg: `⚠️ ALERTA (${diffDays}d)`, class: "badge badge-open", isLate: false };
-    
     return { msg: `No prazo (${diffDays}d)`, class: "badge badge-done", isLate: false };
 }
 
@@ -261,9 +257,7 @@ function processData() {
                 metrics.open++;
                 const sla = calculateSLA(item['Data de Realização'], item['Status']);
                 if(sla.isLate) metrics.late++;
-            } else {
-                metrics.done++;
-            }
+            } else { metrics.done++; }
             const loc = item['Localidade'] || 'Outros';
             metrics.locs[loc] = (metrics.locs[loc] || 0) + 1;
             return true;
@@ -276,17 +270,16 @@ function processData() {
         const sla = calculateSLA(item['Data de Realização'], item['Status']);
         const statusRaw = String(item['Status'] || "").toLowerCase().trim();
         const isEmAndamento = statusRaw === "em andamento";
-        const dDisplay = formatDateOnly(item['Data de Realização']);
 
         return `
             <tr>
                 <td><span class="num-seq">${item['Número Sequencial']}</span></td>
-                <td>${dDisplay ? dDisplay.toLocaleDateString('pt-BR') : '-'}</td>
+                <td>${formatDateOnly(item['Data de Realização']) ? formatDateOnly(item['Data de Realização']).toLocaleDateString('pt-BR') : '-'}</td>
                 <td><span class="badge ${isEmAndamento ? 'badge-open' : 'badge-done'}">${item['Status']}</span></td>
                 <td>
                     <div class="actions-cell">
-                        <button class="btn-action" title="Encaminhar" onclick="updateStatus(${item.originalIndex}, 'Encaminhado')"><i class="fas fa-paper-plane"></i></button>
-                        <button class="btn-action" title="Finalizar" onclick="updateStatus(${item.originalIndex}, 'Finalizado')"><i class="fas fa-check"></i></button>
+                        <button class="btn-action" onclick="updateStatus('${item.id}', 'Encaminhado')"><i class="fas fa-paper-plane"></i></button>
+                        <button class="btn-action" onclick="updateStatus('${item.id}', 'Finalizado')"><i class="fas fa-check"></i></button>
                     </div>
                 </td>
                 <td>${item['Tipo'] || '-'}</td>
@@ -307,24 +300,27 @@ function renderReports(m) {
     document.getElementById('globalEff').innerText = efficiency + '%';
 
     document.getElementById('perfReport').innerHTML = `
-        <div class="report-row"><span class="report-label">Concluídos</span><span class="report-value">${m.done}</span></div>
-        <div class="report-row"><span class="report-label">Pendentes</span><span class="report-value">${m.open}</span></div>
-        <div class="report-row"><span class="report-label">Críticos</span><span class="report-value" style="color:var(--danger)">${m.late}</span></div>
+        <div class="report-row"><span>Concluídos</span><span class="report-value">${m.done}</span></div>
+        <div class="report-row"><span>Pendentes</span><span class="report-value">${m.open}</span></div>
+        <div class="report-row"><span>Críticos</span><span class="report-value" style="color:var(--danger)">${m.late}</span></div>
     `;
 
     let locHtml = '';
     Object.entries(m.locs).sort((a,b) => b[1] - a[1]).forEach(([name, count]) => {
-        locHtml += `<div class="report-row"><span class="report-label">${name}</span><span class="report-value">${count} <span class="perc-badge">${((count/m.total)*100).toFixed(0)}%</span></span></div>`;
+        locHtml += `<div class="report-row"><span>${name}</span><span class="report-value">${count} <span class="perc-badge">${((count/m.total)*100).toFixed(0)}%</span></span></div>`;
     });
     document.getElementById('locReport').innerHTML = locHtml || 'Sem dados.';
 }
 
 function exportExcel() {
-    if(allData.length === 0) return alert("Importe dados primeiro!");
     const ws = XLSX.utils.json_to_sheet(allData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Ouvidoria");
-    XLSX.writeFile(wb, "Relatorio_Ouvidoria_App.xlsx");
+    XLSX.writeFile(wb, "Relatorio_Ouvidoria_Sesc.xlsx");
+}
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
 }
 </script>
 </body>
