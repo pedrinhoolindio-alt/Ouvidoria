@@ -10,7 +10,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
@@ -24,6 +23,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 
+        /* Sidebar Original */
         .sidebar { width: 260px; background: var(--current-brand); color: #fff; height: 100vh; position: fixed; padding: 25px; display: flex; flex-direction: column; z-index: 100; transition: 0.4s; }
         .sidebar h2 { font-size: 1.4rem; margin-bottom: 5px; color: #fff; text-align: center; font-weight: 800; }
         .sidebar p { font-size: 0.65rem; text-align: center; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px; }
@@ -35,26 +35,28 @@
         .nav-item { padding: 14px; cursor: pointer; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; font-weight: 600; background: rgba(255,255,255,0.05); transition: 0.2s; }
         .nav-item.active { background: #fff; color: var(--current-brand); }
 
-        .main { margin-left: 260px; flex: 1; padding: 30px; width: calc(100% - 260px); }
-        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        /* Main Content Original */
+        .main { margin-left: 260px; flex: 1; padding: 30px; width: calc(100% - 260px); transition: 0.4s; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
         .topbar h1 { font-size: 1.5rem; font-weight: 800; color: var(--current-brand); }
         
-        .filter-section { background: #fff; padding: 20px; border-radius: 16px; margin-bottom: 25px; display: flex; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); align-items: flex-end; }
-        .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .filter-section { background: #fff; padding: 20px; border-radius: 16px; margin-bottom: 25px; display: flex; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); align-items: flex-end; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
         .filter-group label { font-size: 0.65rem; font-weight: 800; color: var(--muted); text-transform: uppercase; }
-        .filter-group input { padding: 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-size: 0.9rem; }
+        .filter-group input { padding: 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-size: 0.9rem; width: 100%; }
 
         .cards-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; }
         .stat-card { background: #fff; padding: 25px; border-radius: 20px; border-top: 6px solid var(--current-brand); box-shadow: 0 10px 15px rgba(0,0,0,0.05); }
         .stat-card h4 { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
         .stat-val { font-size: 2rem; font-weight: 900; color: var(--current-brand); }
 
+        /* Dashboard (Gráficos) */
         #dashboardView { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; display: none; }
-        .chart-card { background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.05); height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .chart-card canvas { max-height: 340px !important; width: 100% !important; }
+        .chart-card { background: #fff; padding: 20px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.05); height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-        .table-container { background: #fff; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
-        table { width: 100%; border-collapse: collapse; }
+        /* Tabela Original */
+        .table-container { background: #fff; border-radius: 20px; overflow-x: auto; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { padding: 18px; text-align: left; background: #F8FAFC; color: var(--current-brand); font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--border); position: relative; }
         td { padding: 16px; border-bottom: 1px solid #F1F5F9; font-size: 0.85rem; }
 
@@ -68,6 +70,15 @@
         .btn-main { padding: 12px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: 800; color: #fff; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-import { background: var(--senac-orange); }
         .btn-danger { background: var(--danger); }
+
+        @media (max-width: 1024px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; padding: 15px; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            .main { margin-left: 0; width: 100%; padding: 15px; }
+            .sidebar h2, .sidebar p { width: 100%; }
+            .cards-container { grid-template-columns: repeat(2, 1fr); }
+            #dashboardView { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -75,89 +86,64 @@
 <aside class="sidebar">
     <h2 id="brandTitle">Sesc</h2>
     <p>Gestão de Ouvidoria</p>
-
     <div class="unidade-selector">
         <button class="unidade-btn active" id="btnSesc" onclick="switchUnidade('sesc')">SESC</button>
         <button class="unidade-btn" id="btnSenac" onclick="switchUnidade('senac')">SENAC</button>
     </div>
-
     <div class="nav-item active" onclick="toggleView('tabela', this)"><i class="fas fa-table"></i> <span>Tabela</span></div>
     <div class="nav-item" onclick="toggleView('dashboard', this)"><i class="fas fa-chart-pie"></i> <span>Dashboard</span></div>
-    
     <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn-main btn-danger" onclick="clearDatabase()"><i class="fas fa-trash-alt"></i> LIMPAR BANCO</button>
-        <button class="btn-main btn-import" onclick="document.getElementById('fileInput').click()"><i class="fas fa-upload"></i> IMPORTAR BASE</button>
+        <button class="btn-main btn-danger" onclick="clearDatabase()"><i class="fas fa-trash-alt"></i> <span>LIMPAR</span></button>
+        <button class="btn-main btn-import" onclick="document.getElementById('fileInput').click()"><i class="fas fa-upload"></i> <span>IMPORTAR</span></button>
     </div>
 </aside>
 
 <main class="main">
     <div class="topbar">
-        <h1 id="mainTitle">Gestão de Protocolos Sesc</h1>
+        <h1 id="mainTitle">Gestão Sesc</h1>
         <button class="btn-main" style="background:var(--success)" onclick="exportExcel()"><i class="fas fa-file-excel"></i> EXCEL</button>
     </div>
-
     <div class="filter-section">
         <div class="filter-group"><label>Início</label><input type="date" id="dateStart" onchange="processData()"></div>
         <div class="filter-group"><label>Fim</label><input type="date" id="dateEnd" onchange="processData()"></div>
-        <div class="filter-group" style="flex-grow: 2;"><label>Busca</label><input type="text" id="fSearch" onkeyup="processData()" placeholder="Número, local ou tipo..."></div>
+        <div class="filter-group" style="flex-grow: 2;"><label>Busca</label><input type="text" id="fSearch" onkeyup="processData()" placeholder="Buscar..."></div>
     </div>
-
     <div class="cards-container">
         <div class="stat-card"><h4>Total</h4><div class="stat-val" id="totalCount">0</div></div>
         <div class="stat-card"><h4>Em Aberto</h4><div class="stat-val" id="openCount">0</div></div>
         <div class="stat-card"><h4>Atrasos</h4><div class="stat-val" id="lateCount">0</div></div>
         <div class="stat-card"><h4>Eficiência</h4><div class="stat-val" id="globalEff">100%</div></div>
     </div>
-
     <div id="dashboardView">
         <div class="chart-card"><canvas id="chartStatus"></canvas></div>
         <div class="chart-card"><canvas id="chartPrazo"></canvas></div>
     </div>
-
     <div id="tableView" class="table-container">
         <table>
             <thead>
                 <tr>
                     <th>Protocolo</th>
                     <th>Realização</th>
-                    <th>
-                        Status <i class="fas fa-filter" style="cursor:pointer" onclick="toggleDrop(event, 'dropSt')"></i>
-                        <div id="dropSt" class="filter-dropdown"><div id="listSt"></div></div>
-                    </th>
+                    <th>Status <i class="fas fa-filter" onclick="toggleDrop(event, 'dropSt')"></i><div id="dropSt" class="filter-dropdown"><div id="listSt"></div></div></th>
                     <th>Ação</th>
                     <th>Tipo</th>
                     <th>Localidade</th>
-                    <th>
-                        Prazo <i class="fas fa-filter" style="cursor:pointer" onclick="toggleDrop(event, 'dropPrz')"></i>
-                        <div id="dropPrz" class="filter-dropdown">
-                            <label><input type="checkbox" class="prz-check" value="NO PRAZO" checked onclick="processData()"> NO PRAZO</label>
-                            <label><input type="checkbox" class="prz-check" value="CRÍTICO" checked onclick="processData()"> CRÍTICO</label>
-                            <label><input type="checkbox" class="prz-check" value="CONCLUÍDO" checked onclick="processData()"> CONCLUÍDO</label>
-                        </div>
-                    </th>
+                    <th>Prazo <i class="fas fa-filter" onclick="toggleDrop(event, 'dropPrz')"></i><div id="dropPrz" class="filter-dropdown">
+                        <label><input type="checkbox" class="prz-check" value="NO PRAZO" checked onclick="processData()"> NO PRAZO</label>
+                        <label><input type="checkbox" class="prz-check" value="CRÍTICO" checked onclick="processData()"> CRÍTICO</label>
+                        <label><input type="checkbox" class="prz-check" value="CONCLUÍDO" checked onclick="processData()"> CONCLUÍDO</label>
+                    </div></th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
 </main>
-
 <input type="file" id="fileInput" style="display:none" accept=".xlsx">
 
 <script>
-// Registrar o Plugin de DataLabels
 Chart.register(ChartDataLabels);
-
-// CONFIG FIREBASE
-const firebaseConfig = {
-  apiKey: "AIzaSyAaWmy-IVB8MX9hBH3wuw8zo83dHUzeqbM",
-  authDomain: "relatorio-ouvidoria.firebaseapp.com",
-  projectId: "relatorio-ouvidoria",
-  storageBucket: "relatorio-ouvidoria.firebasestorage.app",
-  messagingSenderId: "919992393287",
-  appId: "1:919992393287:web:46e9d60ab2e07acfca1b62"
-};
-
+const firebaseConfig = { apiKey: "AIzaSyAaWmy-IVB8MX9hBH3wuw8zo83dHUzeqbM", authDomain: "relatorio-ouvidoria.firebaseapp.com", projectId: "relatorio-ouvidoria", storageBucket: "relatorio-ouvidoria.firebasestorage.app", messagingSenderId: "919992393287", appId: "1:919992393287:web:46e9d60ab2e07acfca1b62" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 let currentUnidade = 'sesc';
@@ -170,7 +156,7 @@ function switchUnidade(u) {
     const isSesc = u === 'sesc';
     document.documentElement.style.setProperty('--current-brand', isSesc ? '#003F7F' : '#F47920');
     document.getElementById('brandTitle').innerText = isSesc ? 'Sesc' : 'Senac';
-    document.getElementById('mainTitle').innerText = 'Gestão de Protocolos ' + (isSesc ? 'Sesc' : 'Senac');
+    document.getElementById('mainTitle').innerText = 'Gestão ' + (isSesc ? 'Sesc' : 'Senac');
     document.getElementById('btnSesc').classList.toggle('active', isSesc);
     document.getElementById('btnSenac').classList.toggle('active', !isSesc);
     loadData();
@@ -207,8 +193,13 @@ function renderStatusFilter(list) {
     `).join('');
 }
 
-function parseDate(v) {
+// FUNÇÃO DE DATA BLINDADA
+function parseDate(item) {
+    // Procura por qualquer campo que tenha "Data" ou "Realização"
+    const key = Object.keys(item).find(k => k.includes('Data') || k.includes('Realização'));
+    const v = item[key];
     if (!v) return null;
+    
     let d;
     if (typeof v === 'number') { d = new Date((v - 25569) * 86400 * 1000); } 
     else {
@@ -224,22 +215,19 @@ function parseDate(v) {
 
 function processData() {
     const search = document.getElementById('fSearch').value.toLowerCase();
-    const startF = document.getElementById('dateStart').value ? new Date(document.getElementById('dateStart').value + "T00:00:00") : null;
-    const endF = document.getElementById('dateEnd').value ? new Date(document.getElementById('dateEnd').value + "T23:59:59") : null;
-    
     const selSt = Array.from(document.querySelectorAll('.st-check:checked')).map(c => c.value);
     const selPrz = Array.from(document.querySelectorAll('.prz-check:checked')).map(c => c.value);
 
     let m = { total: 0, open: 0, late: 0, statusMap: {}, prazoMap: {'NO PRAZO':0, 'CRÍTICO':0, 'CONCLUÍDO':0} };
 
     const filtered = allData.filter(item => {
-        const d = parseDate(item['Data de Realização']);
+        const d = parseDate(item);
         const status = item.Status || "Sem Status";
         const isAtivo = status.toLowerCase().match(/andamento|aberto|entregue/);
         const diff = d ? Math.floor((new Date() - d) / 86400000) : 0;
         const situacao = isAtivo ? (diff > 30 ? 'CRÍTICO' : 'NO PRAZO') : 'CONCLUÍDO';
 
-        if ((!startF || (d && d >= startF)) && (!endF || (d && d <= endF)) && selSt.includes(status) && selPrz.includes(situacao) && JSON.stringify(item).toLowerCase().includes(search)) {
+        if (selSt.includes(status) && selPrz.includes(situacao) && JSON.stringify(item).toLowerCase().includes(search)) {
             m.total++;
             if (isAtivo) { m.open++; if(diff > 30) m.late++; }
             m.statusMap[status] = (m.statusMap[status] || 0) + 1;
@@ -261,15 +249,14 @@ function processData() {
             <td>${item._dataStr}</td>
             <td><span class="badge ${item._sit !== 'CONCLUÍDO' ? 'badge-open' : 'badge-done'}">${item.Status}</span></td>
             <td>
-                <button onclick="updateStatus('${item.id}', 'Encaminhado')" class="badge" style="cursor:pointer; background:#E0E7FF; color:#4338CA;"><i class="fas fa-paper-plane"></i></button>
-                <button onclick="updateStatus('${item.id}', 'Finalizado')" class="badge" style="cursor:pointer; background:#DCFCE7; color:#166534;"><i class="fas fa-check"></i></button>
+                <button onclick="updateStatus('${item.id}', 'Encaminhado')" class="badge" style="background:#E0E7FF; color:#4338CA; border:none; margin-right:5px;"><i class="fas fa-paper-plane"></i></button>
+                <button onclick="updateStatus('${item.id}', 'Finalizado')" class="badge" style="background:#DCFCE7; color:#166534; border:none;"><i class="fas fa-check"></i></button>
             </td>
             <td>${item.Tipo || '-'}</td>
             <td>${item.Localidade || '-'}</td>
             <td><span class="badge" style="${item._sit === 'CRÍTICO' ? 'background:#FEE2E2;color:#B91C1C' : ''}">${item._sit} (${item._diff}d)</span></td>
         </tr>
     `).join('');
-
     updateCharts(m);
 }
 
@@ -281,18 +268,12 @@ function updateCharts(m) {
         options: { 
             responsive: true, maintainAspectRatio: false,
             plugins: { 
-                title: { display: true, text: 'Status das Demandas' },
-                legend: { position: 'bottom' },
-                datalabels: {
-                    color: '#fff',
-                    font: { weight: 'bold', size: 12 },
-                    formatter: (value, ctx) => {
-                        let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        let percentage = (value * 100 / sum).toFixed(1) + "%";
-                        return value + " (" + percentage + ")";
-                    }
-                }
-            } 
+                datalabels: { color: '#fff', font: { weight: 'bold' }, formatter: (v, ctx) => { 
+                    let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    return v + " (" + (v*100/sum).toFixed(1) + "%)";
+                }},
+                legend: { position: 'bottom' }
+            }
         }
     });
 
@@ -302,14 +283,7 @@ function updateCharts(m) {
         data: { labels: Object.keys(m.prazoMap), datasets: [{ label: 'Qtd', data: Object.values(m.prazoMap), backgroundColor: ['#10B981', '#EF4444', '#003F7F'] }] },
         options: { 
             responsive: true, maintainAspectRatio: false,
-            plugins: { 
-                title: { display: true, text: 'Situação de SLA' },
-                legend: { display: false },
-                datalabels: {
-                    anchor: 'end', align: 'top', color: '#444', font: { weight: 'bold' },
-                    formatter: (value) => value > 0 ? value : ''
-                }
-            } 
+            plugins: { datalabels: { anchor: 'end', align: 'top', color: '#444' } }
         }
     });
 }
